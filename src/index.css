@@ -786,6 +786,14 @@ button {
   font-weight: 600;
 }
 
+/* Trạng thái Pending (Vàng) */
+.badge-pending {
+  color: #ffd400;
+  border-color: #ffd400;
+  background: rgba(255, 212, 0, 0.05);
+}
+.badge-pending .badge-dot { background: #ffd400; }
+
 /* =========================
    PROFILE PAGE
 ========================= */

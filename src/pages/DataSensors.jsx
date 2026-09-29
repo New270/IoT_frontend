@@ -1,17 +1,33 @@
-import { useState } from 'react'
-import { Search } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 function DataSensors() {
-  // Dữ liệu mẫu (Mock Data)
-  const mockData = [
-    { id: 'S001', name: 'Light Sensor', type: 'Light', value: '1002', unit: 'lux', time: '2026-03-30 14:02:09' },
-    { id: 'S002', name: 'Humidity Sensor', type: 'Humidity', value: '80.2', unit: '%', time: '2026-03-30 14:02:11' },
-    { id: 'S003', name: 'Temperature Sensor', type: 'Temperature', value: '20.4', unit: '°C', time: '2026-03-30 14:02:11' },
-    { id: 'S001', name: 'Light Sensor', type: 'Light', value: '1000', unit: 'lux', time: '2026-03-30 14:01:30' },
-    { id: 'S002', name: 'Humidity Sensor', type: 'Humidity', value: '79.8', unit: '%', time: '2026-03-30 14:01:41' },
-    { id: 'S003', name: 'Temperature Sensor', type: 'Temperature', value: '20.3', unit: '°C', time: '2026-03-30 14:01:41' },
-    { id: 'S001', name: 'Light Sensor', type: 'Light', value: '998', unit: 'lux', time: '2026-03-30 14:01:09' },
-  ]
+  const [sensorData, setSensorData] = useState([])
+
+  const [searchTerm, setSearchTerm] = useState('')
+  const [typeFilter, setTypeFilter] = useState('All')
+  const [dateFilter, setDateFilter] = useState('')
+
+  useEffect(() => {
+    const fetchSensorsHistory = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:5000/api/sensors/history')
+        const data = await res.json()
+        setSensorData(data)
+      } catch (error) {
+        console.error("Lỗi lấy dữ liệu:", error)
+      }
+    }
+    fetchSensorsHistory()
+  }, [])
+
+  const filteredSensors = sensorData.filter(row => {
+    const matchSearch = row.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                        row.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchType = typeFilter === 'All' || row.type === typeFilter
+    const matchDate = dateFilter === '' || row.time.startsWith(dateFilter)
+
+    return matchSearch && matchType && matchDate
+  })
 
   return (
     <>
@@ -20,44 +36,38 @@ function DataSensors() {
           <h1>SENSOR DATA REGISTRY</h1>
           <p>QUERY & BROWSE ALL SENSOR TELEMETRY</p>
         </div>
-
-        <div className="system-info">
-          <div>
-            <span>SERVER UPTIME</span>
-            <strong>124h 42m 18s</strong>
-          </div>
-          <div>
-            <span>MESH CONNECTION</span>
-            <strong className="connection">
-              EXCELLENT (-98.4 dBm)
-            </strong>
-          </div>
-        </div>
       </header>
 
       <div className="page-content">
-        {/* Thanh công cụ tìm kiếm và lọc */}
         <div className="filter-bar">
           <input 
             type="text" 
             className="filter-input" 
-            placeholder="Search by ID or sensor name..." 
+            placeholder="Tìm theo ID hoặc tên cảm biến..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
 
-          <button className="search-btn">Search</button>
+          <input 
+            type="date" 
+            className="filter-input" 
+            style={{ flex: 'none', width: '140px', cursor: 'pointer' }}
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)} 
+          />
           
-          <select className="filter-input filter-select">
-            <option>All Sensors</option>
-            <option>Temperature</option>
-            <option>Humidity</option>
-            <option>Light</option>
-          </select>
-          <select className="filter-input filter-select">
-            <option>2026-03-30 — 2026-03-31</option>
+          <select 
+            className="filter-input filter-select"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+          >
+            <option value="All">TẤT CẢ CẢM BIẾN</option>
+            <option value="temperature">Chỉ Nhiệt độ</option>
+            <option value="humidity">Chỉ Độ ẩm</option>
+            <option value="light">Chỉ Ánh sáng</option>
           </select>
         </div>
 
-        {/* Bảng dữ liệu */}
         <div className="table-container">
           <table className="data-table">
             <thead>
@@ -71,32 +81,22 @@ function DataSensors() {
               </tr>
             </thead>
             <tbody>
-              {mockData.map((row, index) => (
+              {filteredSensors.map((row, index) => (
                 <tr key={index}>
                   <td className="td-highlight">{row.id}</td>
                   <td>{row.name}</td>
-                  <td>{row.type}</td>
+                  <td style={{textTransform: 'capitalize'}}>{row.type}</td>
                   <td className="td-value">{row.value}</td>
                   <td>{row.unit}</td>
                   <td>{row.time}</td>
                 </tr>
               ))}
+
+              {filteredSensors.length === 0 && (
+                 <tr><td colSpan="6" style={{textAlign: 'center', padding: '20px'}}>Không tìm thấy kết quả nào phù hợp.</td></tr>
+              )}
             </tbody>
           </table>
-
-          {/* Phân trang */}
-          <div className="pagination">
-            <span>SHOWING 1-7 OF 184 ENTRIES</span>
-            <div className="page-numbers">
-              <button className="page-btn">&lt;</button>
-              <button className="page-btn active">1</button>
-              <button className="page-btn">2</button>
-              <button className="page-btn">3</button>
-              <button className="page-btn">...</button>
-              <button className="page-btn">10</button>
-              <button className="page-btn">&gt;</button>
-            </div>
-          </div>
         </div>
       </div>
     </>
