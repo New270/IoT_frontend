@@ -51,7 +51,7 @@ function DataSensors() {
           <input 
             type="date" 
             className="filter-input" 
-            style={{ flex: 'none', width: '140px', cursor: 'pointer' }}
+            style={{ flex: 'none', width: '165px', cursor: 'pointer' }}
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)} 
           />

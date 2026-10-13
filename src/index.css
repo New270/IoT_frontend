@@ -967,8 +967,8 @@ button {
 
 .search-btn:hover {
   background: #00ff83;
-  color: #080d15; /* Đổi màu chữ thành đen khi nền sáng lên */
-  box-shadow: 0 0 10px rgba(0, 255, 131, 0.3); /* Hiệu ứng tỏa sáng nhẹ */
+  color: #080d15; 
+  box-shadow: 0 0 10px rgba(0, 255, 131, 0.3);
 }
 
 @media (max-width: 700px) {
