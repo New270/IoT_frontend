@@ -1,6 +1,15 @@
-import { UserCircle } from 'lucide-react'
+import { useState } from 'react'
 
 function Profile() {
+  const [isEditing, setIsEditing] = useState(false)
+  const [fullName, setFullName] = useState('Student')
+  const [email, setEmail] = useState('student@university.local')
+
+  const handleSaveOrEdit = () => {
+    if (isEditing) alert('Đã cập nhật thông tin thành công!')
+    setIsEditing(!isEditing)
+  }
+
   return (
     <>
       <header className="topbar">
@@ -25,12 +34,11 @@ function Profile() {
 
       <div className="page-content">
         
-        {/* Khung User Info chính */}
         <div className="profile-header-card">
           <div className="profile-avatar">S</div>
           <div className="profile-details">
-            <h2>Student</h2>
-            <p>IoT System Operator <span>|</span> student@university.local</p>
+            <h2>{fullName}</h2>
+            <p>IoT System Operator <span>|</span> {email}</p>
           </div>
           <div className="profile-meta">
             <div>
@@ -50,10 +58,7 @@ function Profile() {
           </div>
         </div>
 
-        {/* Khung chia 2 cột */}
         <div className="profile-grid">
-          
-          {/* Cột trái: Account Information */}
           <div className="profile-card">
             <div className="profile-card-header">
               <h3>ACCOUNT INFORMATION</h3>
@@ -62,7 +67,7 @@ function Profile() {
             <div className="profile-list">
               <div className="profile-list-item">
                 <span>FULL NAME</span>
-                <strong>Student</strong>
+                {isEditing ? <input type="text" value={fullName} onChange={(event) => setFullName(event.target.value)} style={{ background: '#121824', color: '#fff', border: '1px solid #00ff83', padding: '4px 8px', borderRadius: '4px' }} /> : <strong>{fullName}</strong>}
               </div>
               <div className="profile-list-item">
                 <span>USERNAME</span>
@@ -70,17 +75,16 @@ function Profile() {
               </div>
               <div className="profile-list-item">
                 <span>EMAIL ADDRESS</span>
-                <strong>student@university.local</strong>
+                {isEditing ? <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} style={{ background: '#121824', color: '#fff', border: '1px solid #00ff83', padding: '4px 8px', borderRadius: '4px' }} /> : <strong>{email}</strong>}
               </div>
               <div className="profile-list-item">
                 <span>ASSIGNED ROLE</span>
                 <strong>IoT System Operator</strong>
               </div>
             </div>
-            <button className="btn-outline">EDIT PROFILE</button>
+            <button className="btn-outline" onClick={handleSaveOrEdit}>{isEditing ? 'SAVE CHANGES' : 'EDIT PROFILE'}</button>
           </div>
 
-          {/* Cột phải: System Access */}
           <div className="profile-card">
             <div className="profile-card-header">
               <h3>SYSTEM ACCESS</h3>

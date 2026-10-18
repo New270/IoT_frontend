@@ -1,3 +1,4 @@
+/* Thiết lập nền tảng: tính kích thước phần tử theo cả padding/border và dùng font chung toàn ứng dụng. */
 * {
   box-sizing: border-box;
 }
@@ -28,6 +29,7 @@ button {
 
 /* =========================
    SIDEBAR
+   Khối menu cố định bên trái: thương hiệu, điều hướng và thông tin tài khoản.
 ========================= */
 
 .sidebar {
@@ -166,6 +168,7 @@ button {
 
 /* =========================
    MAIN
+   Vùng nội dung bên phải sidebar và thanh tiêu đề dùng chung cho các trang.
 ========================= */
 
 .main-content {
@@ -235,6 +238,7 @@ button {
 
 /* =========================
    SENSOR CARDS
+   Ba thẻ tóm tắt số đo; mỗi loại cảm biến có một màu nhận diện riêng.
 ========================= */
 
 .sensor-cards {
@@ -315,6 +319,7 @@ button {
 
 /* =========================
    CHART + DEVICE
+   Lưới Dashboard gồm biểu đồ SVG bên trái và điều khiển thiết bị bên phải.
 ========================= */
 
 .monitor-grid {
@@ -470,6 +475,7 @@ button {
 
 /* =========================
    DEVICE CONTROL
+   Kiểu dáng hàng LED và công tắc; class .device-active đổi sang màu xanh khi bật.
 ========================= */
 
 .device-heading p {
@@ -576,6 +582,7 @@ button {
 
 /* =========================
    RESPONSIVE
+   Khi màn hình hẹp hơn 900px, thu sidebar và xếp biểu đồ/thiết bị thành một cột.
 ========================= */
 
 @media (max-width: 900px) {
@@ -600,6 +607,7 @@ button {
 
 /* =========================
    FILTER & TABLE (Sensors & History)
+   Thanh tìm kiếm, danh sách chọn và bảng dùng chung cho Data Sensors và Action History.
 ========================= */
 .page-content {
   padding: 24px 32px;
@@ -730,6 +738,7 @@ button {
 
 /* =========================
    ACTION HISTORY BADGES
+   Badge màu thể hiện kết quả lệnh: xanh thành công, đỏ thất bại, vàng đang chờ.
 ========================= */
 .badge {
   display: inline-flex;
@@ -796,6 +805,7 @@ button {
 
 /* =========================
    PROFILE PAGE
+   Bố cục trang hồ sơ: thẻ tóm tắt trên cùng và hai cột thông tin/quyền truy cập.
 ========================= */
 .profile-header-card {
   background: #101722;
@@ -950,6 +960,7 @@ button {
 
 /* =========================
    SEARCH BUTTON
+   Nút áp dụng điều kiện lọc; khi rê chuột nền chuyển xanh để phản hồi thao tác.
 ========================= */
 .search-btn {
   background: rgba(0, 255, 131, 0.05); /* Nền trong suốt ám xanh nhẹ */
