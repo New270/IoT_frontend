@@ -59,16 +59,11 @@ function Dashboard({ user }) {
       });
       
       if (response.ok) {
-        setTimeout(async () => {
-          const statusRes = await fetch('http://127.0.0.1:5000/api/devices/status');
-          const statusData = await statusRes.json();
-          
-          if (statusData[deviceCode] !== action) {
-             alert(`Lệnh gạt ${deviceCode} THẤT BẠI (Timeout)! Không có kết nối tới mạch ESP32.`);
-             await fetch(`http://127.0.0.1:5000/api/devices/${deviceCode}/fail`, { method: 'POST' });
-          }
+        // Backend tự xác nhận SUCCESS hoặc chuyển lệnh sang FAILED sau 4 giây.
+        // Frontend chỉ hiển thị trạng thái đang chờ trong khoảng thời gian này.
+        setTimeout(() => {
           setPending(prev => ({ ...prev, [deviceCode]: false }));
-        }, 1500); 
+        }, 4000);
       }
     } catch (error) {
       alert("Lỗi server Backend!");
@@ -93,23 +88,10 @@ function Dashboard({ user }) {
       });
 
       if (response.ok) {
-        setTimeout(async () => {
-          const statusRes = await fetch('http://127.0.0.1:5000/api/devices/status');
-          const statusData = await statusRes.json();
-          let failedDevices = [];
-          
-          for (let cmd of commands) {
-            if (statusData[cmd.device_code] !== actionType) {
-              failedDevices.push(cmd.device_code);
-              await fetch(`http://127.0.0.1:5000/api/devices/${cmd.device_code}/fail`, { method: 'POST' });
-            }
-          }
-
-          if (failedDevices.length > 0) {
-             alert(`Lệnh gạt nhiều thiết bị THẤT BẠI đối với: ${failedDevices.join(', ')} (Timeout)!`);
-          }
+        // Kết quả từng lệnh do backend xử lý và hiển thị ở Action History.
+        setTimeout(() => {
           setPending({ LED1: false, LED2: false, LED3: false });
-        }, 1500);
+        }, 4000);
       }
     } catch (error) {
        alert("Lỗi server Backend khi điều khiển hàng loạt!");
