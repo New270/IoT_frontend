@@ -1,9 +1,9 @@
 import { useState } from 'react'
 
-function Profile() {
+function Profile({ user }) {
   const [isEditing, setIsEditing] = useState(false)
-  const [fullName, setFullName] = useState('Student')
-  const [email, setEmail] = useState('student@university.local')
+  const [fullName, setFullName] = useState(user.full_name || user.username)
+  const [email, setEmail] = useState(user.email || '')
 
   const handleSaveOrEdit = () => {
     if (isEditing) alert('Đã cập nhật thông tin thành công!')
@@ -35,7 +35,7 @@ function Profile() {
       <div className="page-content">
         
         <div className="profile-header-card">
-          <div className="profile-avatar">S</div>
+          <div className="profile-avatar">{user.username.charAt(0).toUpperCase()}</div>
           <div className="profile-details">
             <h2>{fullName}</h2>
             <p>IoT System Operator <span>|</span> {email}</p>
@@ -43,7 +43,7 @@ function Profile() {
           <div className="profile-meta">
             <div>
               <span>USERNAME</span>
-              <strong>student</strong>
+              <strong>{user.username}</strong>
             </div>
             <div>
               <span>ACCOUNT CREATED</span>
@@ -71,7 +71,7 @@ function Profile() {
               </div>
               <div className="profile-list-item">
                 <span>USERNAME</span>
-                <strong>student</strong>
+                <strong>{user.username}</strong>
               </div>
               <div className="profile-list-item">
                 <span>EMAIL ADDRESS</span>

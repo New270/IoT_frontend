@@ -1,55 +1,74 @@
 import { useState, useEffect } from 'react'
-import { Lightbulb } from 'lucide-react'
+import { apiFetch } from '../../lib/api'
 
-function ActionHistory() {
-  const [historyData, setHistoryData] = useState([])
-  
+function DataSensors() {
+  const [sensorData, setSensorData] = useState(() => {
+    try {
+      const cachedData = JSON.parse(localStorage.getItem('iot_sensor_history_cache'))
+      return Array.isArray(cachedData) ? cachedData : []
+    } catch (error) {
+      return []
+    }
+  })
+
   const [searchTerm, setSearchTerm] = useState('')
-  const [deviceFilter, setDeviceFilter] = useState('All')
-  const [actionFilter, setActionFilter] = useState('All')
-  const [resultFilter, setResultFilter] = useState('All')
+  const [typeFilter, setTypeFilter] = useState('All')
+  const [searchPlaceholder, setSearchPlaceholder] = useState('Tìm theo ID, tên, thời gian hoặc giá trị...')
   const [appliedSearch, setAppliedSearch] = useState('')
-  const [appliedDevice, setAppliedDevice] = useState('All')
-  const [appliedAction, setAppliedAction] = useState('All')
-  const [appliedResult, setAppliedResult] = useState('All')
+  const [appliedType, setAppliedType] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
   useEffect(() => {
-    const fetchHistory = async () => {
+    const fetchSensorsHistory = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:5000/api/history')
+        const res = await apiFetch('/api/sensors/history')
         const data = await res.json()
-        setHistoryData(data)
+        setSensorData(data)
+        localStorage.setItem('iot_sensor_history_cache', JSON.stringify(data))
       } catch (error) {
-        console.error("Lỗi lấy lịch sử:", error)
+        console.error("Lỗi lấy dữ liệu:", error)
       }
     }
-    fetchHistory()
-    const timer = setInterval(fetchHistory, 3000)
+    fetchSensorsHistory()
+    const timer = setInterval(fetchSensorsHistory, 3000)
     return () => clearInterval(timer)
   }, [])
 
+  const handleSelectChange = (event) => {
+    const value = event.target.value
+    setTypeFilter(value)
+    const options = {
+      temperature: ['Nhiệt độ', 'Nhập tên hoặc giá trị nhiệt độ...'],
+      humidity: ['Độ ẩm', 'Nhập tên hoặc giá trị độ ẩm...'],
+      light: ['Ánh sáng', 'Nhập tên hoặc giá trị ánh sáng...'],
+      time_mode: ['', 'Nhập thời gian (yyyy-mm-dd hh:mm:ss)...'],
+      All: ['', 'Tìm theo ID, tên, thời gian hoặc giá trị...']
+    }
+    setSearchTerm(options[value][0])
+    setSearchPlaceholder(options[value][1])
+  }
+
   const handleSearch = () => {
     setAppliedSearch(searchTerm)
-    setAppliedDevice(deviceFilter)
-    setAppliedAction(actionFilter)
-    setAppliedResult(resultFilter)
+    setAppliedType(typeFilter)
     setCurrentPage(1)
   }
 
-  const filteredHistory = historyData.filter(row => {
+  const filteredSensors = sensorData.filter(row => {
     const query = appliedSearch.toLowerCase()
-    const matchSearch = appliedSearch === '' || row.id.toLowerCase().includes(query) || row.device.toLowerCase().includes(query) || row.time.toLowerCase().includes(query)
-    const matchDevice = appliedDevice === 'All' || row.device.includes(appliedDevice)
-    const matchAction = appliedAction === 'All' || row.action === appliedAction
-    const matchResult = appliedResult === 'All' || row.result === appliedResult
+    const matchSearch = appliedSearch === '' ||
+      row.id.toLowerCase().includes(query) ||
+      row.name.toLowerCase().includes(query) ||
+      row.time.toLowerCase().includes(query) ||
+      String(row.value).toLowerCase().includes(query)
+    const matchType = appliedType === 'All' || appliedType === '' || row.type === appliedType || appliedType === 'time_mode'
 
-    return matchSearch && matchDevice && matchAction && matchResult
+    return matchSearch && matchType
   })
 
-  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage)
-  const currentHistory = filteredHistory.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  const totalPages = Math.ceil(filteredSensors.length / itemsPerPage)
+  const currentSensors = filteredSensors.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
   const getPageNumbers = () => {
     if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1)
     if (currentPage <= 3) return [1, 2, 3, '...', totalPages]
@@ -61,8 +80,8 @@ function ActionHistory() {
     <>
       <header className="topbar">
         <div>
-          <h1>ACTION HISTORY</h1>
-          <p>AUDIT TRAIL OF DEVICE COMMANDS & RESULTS</p>
+          <h1>SENSOR DATA REGISTRY</h1>
+          <p>QUERY & BROWSE ALL SENSOR TELEMETRY</p>
         </div>
       </header>
 
@@ -71,39 +90,22 @@ function ActionHistory() {
           <input 
             type="text" 
             className="filter-input" 
-            placeholder="Tìm ID, thiết bị hoặc thời gian..."
+            placeholder={searchPlaceholder}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)} 
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
 
           <select 
             className="filter-input filter-select"
-            value={deviceFilter}
-            onChange={(e) => setDeviceFilter(e.target.value)}
+            value={typeFilter}
+            onChange={handleSelectChange}
           >
-            <option value="All">TẤT CẢ THIẾT BỊ</option>
-            <option value="LED Trắng">LED Trắng</option>
-            <option value="LED Xanh dương">LED Xanh dương</option>
-            <option value="LED Xanh lá">LED Xanh lá</option>
+            <option value="All">TẤT CẢ CẢM BIẾN & THỜI GIAN</option>
+            <option value="temperature">Nhiệt độ</option>
+            <option value="humidity">Độ ẩm</option>
+            <option value="light">Ánh sáng</option>
+            <option value="time_mode">Thời gian</option>
           </select>
-
-          <select className="filter-input filter-select" value={resultFilter} onChange={(event) => setResultFilter(event.target.value)}>
-            <option value="All">TẤT CẢ KẾT QUẢ</option>
-            <option value="SUCCESS">SUCCESS</option>
-            <option value="FAILED">FAILED</option>
-            <option value="PENDING">PENDING</option>
-          </select>
-
-          <select 
-            className="filter-input filter-select"
-            value={actionFilter}
-            onChange={(e) => setActionFilter(e.target.value)}
-          >
-            <option value="All">TẤT CẢ HÀNH ĐỘNG</option>
-            <option value="ON">Chỉ báo ON</option>
-            <option value="OFF">Chỉ báo OFF</option>
-          </select>
-
           <button className="search-btn" onClick={handleSearch}>TÌM KIẾM</button>
         </div>
 
@@ -111,46 +113,34 @@ function ActionHistory() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>ACTION ID</th>
-                <th>DEVICE</th>
-                <th>ACTION</th>
-                <th>RESULT</th>
-                <th>TIMESTAMP (UTC)</th>
+                <th>SENSOR ID</th>
+                <th>SENSOR NAME</th>
+                <th>SENSOR TYPE</th>
+                <th>TELEMETRY VALUE</th>
+                <th>UNIT</th>
+                <th>RECORDED TIMESTAMP (UTC)</th>
               </tr>
             </thead>
             <tbody>
-              {currentHistory.map((row, index) => (
+              {currentSensors.map((row, index) => (
                 <tr key={index}>
                   <td className="td-highlight">{row.id}</td>
-                  <td>
-                    <div className="td-device">
-                      <Lightbulb size={16} color="#738096" />
-                      {row.device}
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`action-badge ${row.action === 'OFF' ? 'off' : ''}`}>
-                      {row.action}
-                    </span>
-                  </td>
-                  <td>
-                    <div className={`badge ${row.result === 'SUCCESS' ? 'badge-success' : (row.result === 'FAILED' ? 'badge-failed' : 'badge-pending')}`}>
-                      <span className="badge-dot"></span>
-                      {row.result}
-                    </div>
-                  </td>
+                  <td>{row.name}</td>
+                  <td style={{textTransform: 'capitalize'}}>{row.type}</td>
+                  <td className="td-value">{row.value}</td>
+                  <td>{row.unit}</td>
                   <td>{row.time}</td>
                 </tr>
               ))}
-              
-              {filteredHistory.length === 0 && (
-                 <tr><td colSpan="5" style={{textAlign: 'center', padding: '20px'}}>Không tìm thấy kết quả nào phù hợp.</td></tr>
+
+              {filteredSensors.length === 0 && (
+                 <tr><td colSpan="6" style={{textAlign: 'center', padding: '20px'}}>Không tìm thấy kết quả nào phù hợp.</td></tr>
               )}
             </tbody>
           </table>
         </div>
 
-        {totalPages > 0 && <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filteredHistory.length} itemsPerPage={itemsPerPage} setCurrentPage={setCurrentPage} setItemsPerPage={setItemsPerPage} getPageNumbers={getPageNumbers} />}
+        {totalPages > 0 && <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filteredSensors.length} itemsPerPage={itemsPerPage} setCurrentPage={setCurrentPage} setItemsPerPage={setItemsPerPage} getPageNumbers={getPageNumbers} />}
       </div>
     </>
   )
@@ -200,4 +190,4 @@ function Pagination({ currentPage, totalPages, totalItems, itemsPerPage, setCurr
   </div>
 }
 
-export default ActionHistory
+export default DataSensors

@@ -1,14 +1,32 @@
-import { useState } from 'react'
-import { LayoutDashboard, Database, History, UserCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { LayoutDashboard, Database, History, LogOut, UserCircle } from 'lucide-react'
 
-import Dashboard from './pages/Dashboard'
-import DataSensors from './pages/DataSensors'
-import ActionHistory from './pages/ActionHistory'
-import Profile from './pages/Profile'
+import Login from './features/auth/Login'
+import Dashboard from './features/dashboard/Dashboard'
+import ActionHistory from './features/history/ActionHistory'
+import Profile from './features/profile/Profile'
+import DataSensors from './features/sensors/DataSensors'
+import { apiFetch, clearToken, getToken } from './lib/api'
 
 function App() {
   
-  const [user, setUser] = useState({ user_id: 1, username: 'admin (Demo)' })
+  const [user, setUser] = useState(null)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+
+  useEffect(() => {
+    if (!getToken()) {
+      setIsCheckingAuth(false)
+      return
+    }
+    apiFetch('/api/auth/me')
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (data) setUser(data)
+        else clearToken()
+      })
+      .catch(() => clearToken())
+      .finally(() => setIsCheckingAuth(false))
+  }, [])
   
   // Lưu trang đang mở; lần tải lại sau sẽ quay về đúng trang người dùng xem gần nhất.
   const [currentPage, setCurrentPage] = useState(() => {
@@ -28,10 +46,19 @@ function App() {
     switch (currentPage) {
       case 'sensors': return <DataSensors />
       case 'history': return <ActionHistory />
-      case 'profile': return <Profile />
+      case 'profile': return <Profile user={user} />
       default: return <Dashboard user={user} />
     }
   }
+
+  function logout() {
+    clearToken()
+    setUser(null)
+    localStorage.removeItem('iot_page')
+  }
+
+  if (isCheckingAuth) return <div className="auth-loading">Đang kiểm tra đăng nhập...</div>
+  if (!user) return <Login onAuthenticated={setUser} />
 
   return (
     <div className="app">
@@ -71,9 +98,7 @@ function App() {
             <span className="online"><span className="status-dot"></span> ONLINE</span>
           </div>
           <div className="user-name">{user.username}</div>
-          <div style={{marginTop:'12px', textAlign:'center', padding:'4px', fontSize:'10px', color:'#00ff83', border:'1px dashed #00ff83', borderRadius:'4px'}}>
-            FRONTEND DEMO MODE
-          </div>
+          <button className="logout-button" onClick={logout}><LogOut size={14} /> ĐĂNG XUẤT</button>
         </div>
       </aside>
       {/* Vùng nội dung bên phải: chỉ hiển thị một trang do renderPage() trả về. */}

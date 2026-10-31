@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Thermometer, Droplets, Sun, Lightbulb, Power, Cpu } from 'lucide-react'
+import { apiFetch } from '../../lib/api'
 
 function Dashboard({ user }) {
   const [temperature, setTemperature] = useState(0)
@@ -15,7 +16,7 @@ function Dashboard({ user }) {
   useEffect(() => {
     const fetchSensors = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:5000/api/sensors/latest')
+        const res = await apiFetch('/api/sensors/latest')
         const data = await res.json()
         setTemperature(data.temperature)
         setHumidity(data.humidity)
@@ -31,7 +32,7 @@ function Dashboard({ user }) {
 
     const fetchDeviceStatus = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:5000/api/devices/status')
+        const res = await apiFetch('/api/devices/status')
         const data = await res.json()
         setPending(prevPending => {
             if (!prevPending.LED1) setLed1(data.LED1 === 'ON');
@@ -52,10 +53,10 @@ function Dashboard({ user }) {
     setPending(prev => ({ ...prev, [deviceCode]: true }));
 
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/devices/${deviceCode}/control`, {
+      const response = await apiFetch(`/api/devices/${deviceCode}/control`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: action, user_id: user.user_id }),
+        body: JSON.stringify({ action }),
       });
       
       if (response.ok) {
@@ -81,10 +82,10 @@ function Dashboard({ user }) {
     setPending({ LED1: true, LED2: true, LED3: true });
 
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/devices/bulk_control`, {
+      const response = await apiFetch('/api/devices/bulk_control', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ commands: commands, user_id: user.user_id }),
+        body: JSON.stringify({ commands }),
       });
 
       if (response.ok) {
@@ -210,7 +211,9 @@ function SensorChart({ points }) {
   const chartHeight = height - paddingTop - paddingBottom;
 
   const maxLeftValue = 100
-  const maxRightValue = 1000
+  // Tự mở rộng trục ánh sáng theo dữ liệu, với mốc tối thiểu là 1000 lux.
+  const highestLight = Math.max(0, ...points.map((point) => Number(point.light) || 0))
+  const maxRightValue = Math.max(1000, Math.ceil(highestLight / 1000) * 1000)
   const getLeftCoord = (index, value) => {
     const x = paddingLeft + (index / (points.length - 1)) * chartWidth;
     const y = paddingTop + chartHeight - (value / maxLeftValue) * chartHeight;
@@ -265,9 +268,9 @@ function SensorChart({ points }) {
             </g>
           );
         })}
-        {[0, 200, 400, 600, 800, 1000].map((value) => {
+        {Array.from({ length: 6 }, (_, index) => (maxRightValue / 5) * index).map((value) => {
           const y = paddingTop + chartHeight - (value / maxRightValue) * chartHeight;
-          return <text key={`right-${value}`} x={width - paddingRight + 8} y={y + 3} fill="#687587" fontSize="9" textAnchor="start">{value}</text>
+          return <text key={`right-${value}`} x={width - paddingRight + 8} y={y + 3} fill="#687587" fontSize="9" textAnchor="start">{Math.round(value)}</text>
         })}
 
         {points.map((point, i) => {
